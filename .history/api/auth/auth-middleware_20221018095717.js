@@ -1,6 +1,6 @@
 const { JWT_SECRET } = require("../secrets"); // use this secret!
 const jwt = require('jsonwebtoken')
-const { findBy }= require('../users/users-model')
+const User = require('../users/users-model')
 const restricted = (req, res, next) => {
   /*
     If the user does not provide a token in the Authorization header:
@@ -43,7 +43,7 @@ const only = role_name => (req, res, next) => {
 
     Pull the decoded token from the req object, to avoid verifying it again!
   */
- if (role_name === req.decodedToken.role_name ){
+ if (req.decodedToken === role_name){
   next()
  } else{
     next({ status: 403, message: 'This is not for you'})
@@ -60,11 +60,10 @@ const checkUsernameExists = async (req, res, next) => {
     }
   */
  try{
-  const [user] = await findBy({ username: req.body.username })
-  if(!user){
-    next({ status: 401, message: 'Invalid credentials'})
+  const [user] = await User.findby(req.body.username)
+  if(user){
+    next({ status: 422, message: 'Invalid credentials'})
   } else{
-    req.user = user
     next()
   }
  } catch (err){
